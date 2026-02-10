@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  fullName  String?  @map("full_name")
+  role      Role
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  teachingClasses Class[]         @relation("TeacherClasses")
+  attendance      Attendance[]
+
+  @@map("profiles")
+}
+
+model Class {
+  id        String   @id @default(cuid())
+  name      String
+  teacherId String   @map("teacher_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  teacher       Profile          @relation("TeacherClasses", fields: [teacherId], references: [id], onDelete: Cascade)
+  attendance    Attendance[]
+  attendanceCodes AttendanceCode[]
+
+  @@map("classes")
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  classId   String   @map("class_id")
+  studentId String   @map("student_id")
+  date      DateTime @db.Date
+  status    AttendanceStatus
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  student Profile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([classId, studentId, date])
+  @@map("attendance")
+}
+
+model AttendanceCode {
+  id         String   @id @default(cuid())
+  classId    String   @map("class_id")
+  code       String   @unique
+  expiryTime DateTime @map("expiry_time")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  class Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@map("attendance_codes")
+}
+
+enum Role {
+  STUDENT @map("student")
+  TEACHER @map("teacher")
+}
+
+enum AttendanceStatus {
+  PRESENT @map("present")
+  ABSENT  @map("absent")
+}
