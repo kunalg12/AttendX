@@ -102,21 +102,29 @@ A modern React Native attendance management application built with Expo and Supa
 ### Authentication Screens
 
 #### Login Screen
-![Login Screen](screenshots/login.png)
+<div style="text-align: center;">
+  <img src="screenshots/login.png" alt="Login Screen" width="200" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+</div>
 *Clean and intuitive login interface with email and password fields*
 
 #### Registration Screen  
-![Registration Screen](screenshots/register.png)
+<div style="text-align: center;">
+  <img src="screenshots/register.png" alt="Registration Screen" width="200" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+</div>
 *User registration with role selection (Teacher/Student)*
 
 ### Dashboard Screens
 
 #### Teacher Dashboard
-![Teacher Dashboard](screenshots/teacher-dashboard.png)
+<div style="text-align: center;">
+  <img src="screenshots/teacher-dashboard.png" alt="Teacher Dashboard" width="200" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+</div>
 *Comprehensive dashboard for teachers to manage classes and attendance*
 
 #### Student Dashboard
-![Student Dashboard](screenshots/student-dashboard.png)
+<div style="text-align: center;">
+  <img src="screenshots/student-dashboard.png" alt="Student Dashboard" width="200" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+</div>
 *Student view for enrolled classes and attendance tracking*
 
 ## 🏗 Project Structure
