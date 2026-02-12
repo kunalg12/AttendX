@@ -14,8 +14,7 @@ import {
     ScrollView
 } from 'react-native';
 import { supabase } from '../../supabaseConfig';
-import _ from 'lodash'; // Add lodash for grouping data
-import * as FileSystem from 'expo-file-system';
+import { Paths, File as ExpoFile } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { FontAwesome } from '@expo/vector-icons';
 import * as Print from 'expo-print';
@@ -225,8 +224,11 @@ function ReportsScreen() {
         setSharingLoading(true);
         try {
             const csvContent = createCSVContent();
-            const fileUri = FileSystem.documentDirectory + `${selectedClass.name.replace(/\s+/g, '_')}_attendance.csv`;
-            await FileSystem.writeAsStringAsync(fileUri, csvContent);
+            if (!Paths.document) {
+                throw new Error('documentDirectory is not available');
+            }
+            const fileUri = Paths.document.uri + `${selectedClass.name.replace(/\s+/g, '_')}_attendance.csv`;
+            await new ExpoFile(fileUri).write(csvContent);
 
             if (Platform.OS === 'ios' || Platform.OS === 'android') {
                 await Sharing.shareAsync(fileUri);

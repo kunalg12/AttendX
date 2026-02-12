@@ -5,7 +5,7 @@ import AttendanceScreen from './AttendanceScreen';
 import ReportsScreen from './ReportsScreen';
 import ProfileScreen from './ProfileScreen';
 
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 // import CoursesScreen from './CoursesScreen';
 import { View, Text, StyleSheet } from 'react-native';
 
@@ -21,7 +21,7 @@ export default function TeacherDashboard() {
                 tabBarStyle: styles.tabBar,
                 tabBarLabelStyle: styles.tabLabel,
                 tabBarIcon: ({ color, size }) => {
-                    let iconName;
+                    let iconName: React.ComponentProps<typeof MaterialIcons>['name'] = 'help';
 
                     if (route.name === 'Courses') {
                         iconName = 'class';

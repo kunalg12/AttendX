@@ -18,10 +18,18 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
 import { Linking } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface Class {
     id: number;
     name: string;
+}
+
+interface LiveAttendance {
+    id: string;
+    student_id: string;
+    full_name: string;
+    created_at: string;
 }
 
 interface LocationPreview {
@@ -49,6 +57,8 @@ function AttendanceScreen() {
     const [locationPermission, setLocationPermission] = useState(false);
     const [showLocationPreview, setShowLocationPreview] = useState(false);
     const [currentLocation, setCurrentLocation] = useState<LocationPreview | null>(null);
+    const [liveAttendance, setLiveAttendance] = useState<LiveAttendance[]>([]);
+    const attendanceSubscription = useRef<RealtimeChannel | null>(null);
 
     // Load saved timer settings
     useEffect(() => {
@@ -156,6 +166,9 @@ function AttendanceScreen() {
         return () => {
             if (timerRef.current) {
                 clearInterval(timerRef.current);
+            }
+            if (attendanceSubscription.current) {
+                supabase.removeChannel(attendanceSubscription.current);
             }
         };
     }, []);
@@ -327,12 +340,59 @@ function AttendanceScreen() {
             setAttendanceCode(code);
             const totalSeconds = (minutes * 60) + seconds;
             setExpirySeconds(totalSeconds);
+            setLiveAttendance([]); // Reset live list for new code
+            setupAttendanceSubscription(selectedClass!.id);
         } catch (error) {
             console.error('Generate code error:', error);
             Alert.alert('Error', 'Failed to generate attendance code');
         } finally {
             setCodeLoading(false);
         }
+    };
+
+    const setupAttendanceSubscription = (classId: number) => {
+        // Cleanup existing subscription
+        if (attendanceSubscription.current) {
+            supabase.removeChannel(attendanceSubscription.current);
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+
+        attendanceSubscription.current = supabase
+            .channel(`live-attendance-${classId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'attendance',
+                    filter: `class_id=eq.${classId}`
+                },
+                async (payload) => {
+                    const newRecord = payload.new;
+                    if (newRecord.date === today) {
+                        // Fetch student name
+                        const { data: profile } = await supabase
+                            .from('profiles')
+                            .select('full_name')
+                            .eq('id', newRecord.student_id)
+                            .single();
+
+                        if (profile) {
+                            setLiveAttendance(prev => [
+                                {
+                                    id: newRecord.id,
+                                    student_id: newRecord.student_id,
+                                    full_name: profile.full_name,
+                                    created_at: newRecord.created_at
+                                },
+                                ...prev
+                            ]);
+                        }
+                    }
+                }
+            )
+            .subscribe();
     };
 
     const renderClassItem = ({ item }: { item: Class }) => (
@@ -408,6 +468,34 @@ function AttendanceScreen() {
                     ) : (
                         <Text style={styles.expiredText}>Code Expired</Text>
                     )}
+                </View>
+            )}
+
+            {attendanceCode && (
+                <View style={styles.liveFeedContainer}>
+                    <View style={styles.liveFeedHeader}>
+                        <View style={styles.liveDot} />
+                        <Text style={styles.liveFeedTitle}>Live Check-ins</Text>
+                    </View>
+                    <FlatList
+                        data={liveAttendance}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({ item }) => (
+                            <View style={styles.liveItem}>
+                                <View style={styles.liveItemInfo}>
+                                    <Text style={styles.studentName}>{item.full_name}</Text>
+                                    <Text style={styles.checkInTime}>
+                                        {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </Text>
+                                </View>
+                                <MaterialIcons name="check-circle" size={20} color="#2ecc71" />
+                            </View>
+                        )}
+                        ListEmptyComponent={
+                            <Text style={styles.emptyLiveText}>Waiting for students to join...</Text>
+                        }
+                        style={styles.liveList}
+                    />
                 </View>
             )}
 
@@ -769,6 +857,65 @@ const styles = StyleSheet.create({
     map: {
         width: '100%',
         height: '100%',
+    },
+    liveFeedContainer: {
+        flex: 1,
+        marginTop: 20,
+        backgroundColor: '#fff',
+        borderRadius: 15,
+        padding: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 5,
+    },
+    liveFeedHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    liveDot: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        backgroundColor: '#e74c3c',
+        marginRight: 8,
+    },
+    liveFeedTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#2c3e50',
+    },
+    liveList: {
+        flex: 1,
+    },
+    liveItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f1f1',
+    },
+    liveItemInfo: {
+        flex: 1,
+    },
+    studentName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+    },
+    checkInTime: {
+        fontSize: 12,
+        color: '#7f8c8d',
+        marginTop: 2,
+    },
+    emptyLiveText: {
+        textAlign: 'center',
+        color: '#95a5a6',
+        marginTop: 20,
+        fontStyle: 'italic',
     },
 });
 

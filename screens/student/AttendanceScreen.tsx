@@ -10,6 +10,7 @@ import {
     ScrollView,
     Dimensions
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { supabase } from '../../supabaseConfig';
 
 // Define interfaces for our data structure
@@ -363,7 +364,13 @@ export default function AttendanceScreen() {
                             </View>
                         ))
                     ) : (
-                        <Text style={styles.noDataText}>No subjects found</Text>
+                        <View style={styles.emptyContainer}>
+                            <MaterialIcons name="assessment" size={80} color="#e0e0e0" />
+                            <Text style={styles.emptyTitle}>No Attendance Data</Text>
+                            <Text style={styles.emptySubtext}>
+                                Once you join classes and start marking attendance, your stats will appear here.
+                            </Text>
+                        </View>
                     )}
                 </View>
             </ScrollView>
@@ -565,11 +572,24 @@ const styles = StyleSheet.create({
         color: '#e74c3c',
         fontWeight: '600',
     },
-    noDataText: {
-        textAlign: 'center',
-        fontSize: 16,
-        color: 'gray',
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 50,
+        paddingHorizontal: 40,
+    },
+    emptyTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#2c3e50',
         marginTop: 20,
+    },
+    emptySubtext: {
+        fontSize: 16,
+        color: '#7f8c8d',
+        textAlign: 'center',
+        marginTop: 10,
+        lineHeight: 22,
     },
     noRecordsText: {
         textAlign: 'center',

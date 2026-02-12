@@ -11,6 +11,7 @@ import {
     TextInput,
     ActivityIndicator
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { supabase } from '../../supabaseConfig';
 
 interface CourseWithClasses {
@@ -76,27 +77,33 @@ export default function ClassesScreen() {
 
             // Add courses with their classes
             if (courseEnrollments) {
-                courseEnrollments.forEach(enrollment => {
+                courseEnrollments.forEach((enrollment: any) => {
                     if (enrollment.courses) {
-                        courseData.push({
-                            id: enrollment.courses.id,
-                            name: enrollment.courses.name,
-                            classes: enrollment.courses.course_classes.map(cc => ({
-                                id: cc.classes.id,
-                                name: cc.classes.name
-                            }))
-                        });
+                        const course = Array.isArray(enrollment.courses) ? enrollment.courses[0] : enrollment.courses;
+                        if (course) {
+                            courseData.push({
+                                id: course.id,
+                                name: course.name,
+                                classes: (course.course_classes || []).map((cc: any) => ({
+                                    id: cc.classes?.id || (Array.isArray(cc.classes) ? cc.classes[0]?.id : cc.classes?.id),
+                                    name: cc.classes?.name || (Array.isArray(cc.classes) ? cc.classes[0]?.name : cc.classes?.name)
+                                }))
+                            });
+                        }
                     }
                 });
             }
 
             // Add standalone classes as a special group
-            const standaloneClasses = classEnrollments
+            const standaloneClasses = (classEnrollments as any[])
                 ?.filter(ce => ce.classes)
-                .map(ce => ({
-                    id: ce.classes.id,
-                    name: ce.classes.name
-                })) || [];
+                .map(ce => {
+                    const cls = Array.isArray(ce.classes) ? ce.classes[0] : ce.classes;
+                    return {
+                        id: cls.id,
+                        name: cls.name
+                    };
+                }) || [];
 
             if (standaloneClasses.length > 0) {
                 courseData.push({
@@ -258,7 +265,6 @@ export default function ClassesScreen() {
                 <FlatList
                     data={courses}
                     keyExtractor={item => item.id}
-                    contentContainerStyle={styles.listContainer}
                     renderItem={({ item: course }) => (
                         <View style={styles.courseContainer}>
                             <TouchableOpacity
@@ -302,15 +308,23 @@ export default function ClassesScreen() {
                             )}
                         </View>
                     )}
+                    contentContainerStyle={[
+                        styles.listContainer,
+                        courses.length === 0 && { flex: 1, justifyContent: 'center' }
+                    ]}
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
-                            <Text style={styles.emptyIcon}>📚</Text>
-                            <Text style={styles.emptyText}>
-                                No courses joined yet
-                            </Text>
+                            <MaterialIcons name="class" size={80} color="#e0e0e0" />
+                            <Text style={styles.emptyTitle}>No Classes Joined</Text>
                             <Text style={styles.emptySubtext}>
-                                Tap the "Join New" button to get started
+                                You haven't joined any courses or classes yet. Enter a code to get started!
                             </Text>
+                            <TouchableOpacity 
+                                style={[styles.joinButton, { marginTop: 20 }]}
+                                onPress={() => setModalVisible(true)}
+                            >
+                                <Text style={styles.joinButtonText}>Join Now</Text>
+                            </TouchableOpacity>
                         </View>
                     }
                 />
@@ -508,22 +522,21 @@ const styles = StyleSheet.create({
     },
     emptyContainer: {
         alignItems: 'center',
-        padding: 32,
+        justifyContent: 'center',
+        paddingHorizontal: 40,
     },
-    emptyIcon: {
-        fontSize: 48,
-        marginBottom: 16,
-    },
-    emptyText: {
-        fontSize: 18,
+    emptyTitle: {
+        fontSize: 22,
         fontWeight: 'bold',
         color: '#2c3e50',
-        marginBottom: 8,
+        marginTop: 20,
     },
     emptySubtext: {
-        fontSize: 14,
-        color: '#666',
+        fontSize: 16,
+        color: '#7f8c8d',
         textAlign: 'center',
+        marginTop: 10,
+        lineHeight: 22,
     },
     // ... existing modal styles ...
     modalOverlay: {

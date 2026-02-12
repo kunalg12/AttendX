@@ -4,7 +4,7 @@ import ClassesScreen from './ClassesScreen';
 import AttendanceScreen from './AttendanceScreen';
 import MarkAttendanceScreen from './MarkAttendanceScreen';
 import ProfileScreen from './ProfileScreen';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const Tab = createBottomTabNavigator();
 
@@ -16,7 +16,7 @@ export default function StudentDashboard() {
                 tabBarActiveTintColor: '#3498db',
                 tabBarInactiveTintColor: 'gray',
                 tabBarIcon: ({ color, size }) => {
-                    let iconName;
+                    let iconName: React.ComponentProps<typeof MaterialIcons>['name'] = 'help';
 
                     if (route.name === 'Courses') {
                         iconName = 'class';

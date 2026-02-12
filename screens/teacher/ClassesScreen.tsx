@@ -10,10 +10,11 @@ import {
     Modal,
     TextInput,
     ActivityIndicator,
-    ScrollView,
-    Clipboard
+    ScrollView
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { supabase } from '../../supabaseConfig';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface Course {
     id: string;
@@ -32,19 +33,29 @@ interface Class {
     join_code: string;
 }
 
+interface CourseFormData {
+    courseName: string;
+    description: string;
+    semester: string;
+    className: string;
+    teacher_name: string;
+    subject: string;
+    selectedClasses: string[];
+}
+
 export default function CoursesAndClassesScreen() {
     const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
     const [modalVisible, setModalVisible] = useState(false);
     const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<CourseFormData>({
         courseName: '',
         description: '',
         semester: '',
         className: '',
-        teacher_name: '',    // Add this
-        subject: '',         // Add this
-        selectedClasses: []  // Add this
+        teacher_name: '',
+        subject: '',
+        selectedClasses: []
     });
     const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
     const [classModalVisible, setClassModalVisible] = useState(false);
@@ -270,12 +281,7 @@ export default function CoursesAndClassesScreen() {
             setModalVisible(false);
             setClassModalVisible(false);
             setNewClassName('');
-            setFormData({
-                courseName: '',
-                description: '',
-                semester: '',
-                className: ''
-            });
+            resetForm();
             fetchCourses();
             Alert.alert('Success', 'Class created successfully!');
         } catch (error) {
@@ -354,8 +360,8 @@ export default function CoursesAndClassesScreen() {
         }
     };
 
-    const copyJoinCode = (code: string) => {
-        Clipboard.setString(code);
+    const copyJoinCode = async (code: string) => {
+        await Clipboard.setStringAsync(code);
         Alert.alert('Success', 'Join code copied to clipboard!');
     };
 
@@ -490,9 +496,27 @@ export default function CoursesAndClassesScreen() {
                     data={courses}
                     renderItem={renderCourseItem}
                     keyExtractor={item => item.id}
-                    contentContainerStyle={styles.listContainer}
+                    contentContainerStyle={[
+                        styles.listContainer,
+                        courses.length === 0 && { flex: 1, justifyContent: 'center' }
+                    ]}
                     ListEmptyComponent={
-                        <Text style={styles.emptyText}>No courses yet</Text>
+                        <View style={styles.emptyContainer}>
+                            <MaterialIcons name="school" size={80} color="#e0e0e0" />
+                            <Text style={styles.emptyTitle}>No Courses Yet</Text>
+                            <Text style={styles.emptySubtitle}>
+                                Create your first course or class to start managing attendance.
+                            </Text>
+                            <TouchableOpacity 
+                                style={[styles.createButton, { marginTop: 20 }]}
+                                onPress={() => {
+                                    setCreationMode('course');
+                                    setModalVisible(true);
+                                }}
+                            >
+                                <Text style={styles.createButtonText}>Get Started</Text>
+                            </TouchableOpacity>
+                        </View>
                     }
                 />
             )}
@@ -858,11 +882,23 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginTop: 8,
     },
-    emptyText: {
-        textAlign: 'center',
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 40,
+    },
+    emptyTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#2c3e50',
+        marginTop: 20,
+    },
+    emptySubtitle: {
         fontSize: 16,
         color: '#7f8c8d',
-        marginTop: 24,
+        textAlign: 'center',
+        marginTop: 10,
+        lineHeight: 22,
     },
     modalOverlay: {
         flex: 1,

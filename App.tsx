@@ -4,22 +4,29 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { Session } from '@supabase/supabase-js';
 import { supabase, Profile } from './supabaseConfig';
 import { ActivityIndicator, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Import screens (we'll create these next)
+// Import screens
 import LoginScreen from './screens/LoginScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
 import StudentDashboard from './screens/student/StudentDashboard';
 import TeacherDashboard from './screens/teacher/TeacherDashboard';
+import ResetPasswordScreen from './screens/ResetPasswordScreen';
 import SplashScreen from './screens/SplashScreen';
+import OnboardingScreen from './screens/OnboardingScreen';
+import * as Linking from 'expo-linking';
+
 
 // Define our stack parameter list
 type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
+  ResetPassword: undefined;
   StudentDashboard: undefined;
   TeacherDashboard: undefined;
+  Onboarding: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -29,12 +36,23 @@ export default function App() {
   const [userRole, setUserRole] = useState<'student' | 'teacher' | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // Check onboarding status
+    AsyncStorage.getItem('@onboarding_completed').then((value) => {
+      setShowOnboarding(value !== 'true');
+    });
+
     // Listen for auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
+        
+        if (event === 'PASSWORD_RECOVERY') {
+          setIsPasswordRecovery(true);
+        }
 
         if (session?.user) {
           // Fetch user role from profiles table
@@ -80,7 +98,22 @@ export default function App() {
     };
   }, []);
 
-  if (isLoading) {
+  // Handle deep linking
+  const url = Linking.useURL();
+
+  useEffect(() => {
+    if (url) {
+      const { hostname, path } = Linking.parse(url);
+      
+      // Check if it's a password reset link
+      if (path === 'reset-password' || hostname === 'reset-password') {
+         setIsPasswordRecovery(true);
+      }
+    }
+  }, [url]);
+
+
+  if (isLoading || showOnboarding === null) {
     return <SplashScreen onLoadingComplete={() => setIsLoading(false)} />;
   }
 
@@ -95,7 +128,15 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!session ? (
+        {isPasswordRecovery ? (
+          <Stack.Screen name="ResetPassword">
+            {(props) => <ResetPasswordScreen {...props} onResetComplete={() => setIsPasswordRecovery(false)} />}
+          </Stack.Screen>
+        ) : showOnboarding ? (
+          <Stack.Screen name="Onboarding">
+            {(props) => <OnboardingScreen {...props} onComplete={() => setShowOnboarding(false)} />}
+          </Stack.Screen>
+        ) : !session ? (
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />

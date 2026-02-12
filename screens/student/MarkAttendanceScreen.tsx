@@ -14,6 +14,7 @@ import {
     RefreshControl,
     ScrollView
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { supabase } from '../../supabaseConfig';
 import MapView, { Marker } from 'react-native-maps';
@@ -323,10 +324,11 @@ function MarkAttendanceScreen() {
     if (classes.length === 0) {
         return (
             <SafeAreaView style={styles.container}>
-                <View style={styles.noClassesContainer}>
-                    <Text style={styles.noClassesTitle}>No Classes Found</Text>
-                    <Text style={styles.noClassesText}>
-                        You are not enrolled in any classes. Join a class first to mark attendance.
+                <View style={styles.emptyContainer}>
+                    <MaterialIcons name="event-available" size={80} color="#e0e0e0" />
+                    <Text style={styles.emptyTitle}>No Classes Enrolled</Text>
+                    <Text style={styles.emptySubtext}>
+                        You are not enrolled in any classes yet. Join a class to start marking your attendance.
                     </Text>
                 </View>
             </SafeAreaView>
@@ -493,21 +495,24 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#555',
     },
-    noClassesContainer: {
+    emptyContainer: {
         flex: 1,
-        justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        justifyContent: 'center',
+        paddingHorizontal: 40,
     },
-    noClassesTitle: {
+    emptyTitle: {
         fontSize: 22,
         fontWeight: 'bold',
-        marginBottom: 10,
+        color: '#2c3e50',
+        marginTop: 20,
     },
-    noClassesText: {
+    emptySubtext: {
         fontSize: 16,
+        color: '#7f8c8d',
         textAlign: 'center',
-        color: '#555',
+        marginTop: 10,
+        lineHeight: 22,
     },
     markAttendanceContainer: {
         backgroundColor: '#f5f5f5',

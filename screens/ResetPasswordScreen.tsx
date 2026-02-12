@@ -22,7 +22,7 @@ import Animated, {
     withSpring 
 } from 'react-native-reanimated';
 import { MaterialIcons } from '@expo/vector-icons';
-import LoginIllustration from '../assets/undraw_login_wqkt.png';
+import LoginIllustration from '../assets/undraw_login_wqkt.png'; // Using the same illust or different one
 
 const { width, height } = Dimensions.get('window');
 
@@ -30,14 +30,15 @@ type RootStackParamList = {
     Login: undefined;
 };
 
-type ForgotPasswordScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
+type ResetPasswordScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
 type Props = {
-    navigation: ForgotPasswordScreenNavigationProp;
+    navigation: ResetPasswordScreenNavigationProp;
+    onResetComplete: () => void;
 };
 
-export default function ForgotPasswordScreen({ navigation }: Props) {
-    const [email, setEmail] = useState('');
+export default function ResetPasswordScreen({ navigation, onResetComplete }: Props) {
+    const [newPassword, setNewPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
     // Animation values
@@ -56,16 +57,16 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
         };
     });
 
-    async function handleResetPassword() {
-        if (email === '') {
-            Alert.alert('Error', 'Please enter your email address');
+    async function handleUpdatePassword() {
+        if (newPassword === '') {
+            Alert.alert('Error', 'Please enter your new password');
             return;
         }
 
         setLoading(true);
 
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: 'attendx://reset-password',
+        const { error } = await supabase.auth.updateUser({
+            password: newPassword
         });
 
         setLoading(false);
@@ -74,9 +75,12 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
             Alert.alert('Error', error.message);
         } else {
             Alert.alert(
-                'Check your email',
-                'We have sent a password reset link to your email.',
-                [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+                'Success',
+                'Your password has been updated successfully.',
+                [{ text: 'OK', onPress: () => {
+                    onResetComplete();
+                    navigation.navigate('Login'); 
+                } }]
             );
         }
     }
@@ -96,27 +100,26 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
             <View style={styles.content}>
                 <Animated.View style={[styles.headerContainer, { opacity: fadeAnim }]}>
                     <Image source={LoginIllustration} style={styles.illustration} />
-                    <Text style={styles.title}>Reset Password</Text>
-                    <Text style={styles.subtitle}>Enter your email to receive a reset link</Text>
+                    <Text style={styles.title}>Set New Password</Text>
+                    <Text style={styles.subtitle}>Enter your new password below</Text>
                 </Animated.View>
 
                 <Animated.View style={[styles.inputContainer, animatedStyle]}>
                     <View style={styles.inputWrapper}>
-                        <MaterialIcons name="email" size={20} color="#666" style={styles.inputIcon} />
+                        <MaterialIcons name="lock" size={20} color="#666" style={styles.inputIcon} />
                         <TextInput
                             style={styles.input}
-                            placeholder="Email"
+                            placeholder="New Password"
                             placeholderTextColor="#999"
-                            value={email}
-                            onChangeText={setEmail}
-                            autoCapitalize="none"
-                            keyboardType="email-address"
+                            value={newPassword}
+                            onChangeText={setNewPassword}
+                            secureTextEntry
                         />
                     </View>
 
                     <TouchableOpacity
                         style={styles.resetButton}
-                        onPress={handleResetPassword}
+                        onPress={handleUpdatePassword}
                         disabled={loading}
                     >
                         <LinearGradient
@@ -126,16 +129,9 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
                             {loading ? (
                                 <ActivityIndicator color="#fff" />
                             ) : (
-                                <Text style={styles.resetButtonText}>Send Reset Link</Text>
+                                <Text style={styles.resetButtonText}>Update Password</Text>
                             )}
                         </LinearGradient>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        onPress={() => navigation.goBack()}
-                        style={styles.backLink}
-                    >
-                        <Text style={styles.backText}>Back to Login</Text>
                     </TouchableOpacity>
                 </Animated.View>
             </View>
@@ -229,14 +225,5 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 18,
         letterSpacing: 1,
-    },
-    backLink: {
-        alignItems: 'center',
-        marginTop: 20,
-    },
-    backText: {
-        color: '#666',
-        fontSize: 15,
-        fontWeight: '500',
     },
 });
