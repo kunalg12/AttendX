@@ -19,14 +19,38 @@ model Profile {
 
   // Relations
   teachingClasses Class[]         @relation("TeacherClasses")
+  teachingCourses Course[]        @relation("TeacherCourses")
   attendance      Attendance[]
+  courseEnrollments CourseEnrollment[]
+  classEnrollments  ClassEnrollment[]
 
   @@map("profiles")
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  semester    String?
+  subject     String?
+  joinCode    String   @unique @map("join_code")
+  teacherId   String   @map("teacher_id")
+  teacherName String?  @map("teacher_name")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  teacher     Profile          @relation("TeacherCourses", fields: [teacherId], references: [id], onDelete: Cascade)
+  classes     CourseClass[]
+  enrollments CourseEnrollment[]
+
+  @@map("courses")
 }
 
 model Class {
   id        String   @id @default(cuid())
   name      String
+  joinCode  String   @unique @map("join_code")
   teacherId String   @map("teacher_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -35,8 +59,48 @@ model Class {
   teacher       Profile          @relation("TeacherClasses", fields: [teacherId], references: [id], onDelete: Cascade)
   attendance    Attendance[]
   attendanceCodes AttendanceCode[]
+  courses       CourseClass[]
+  enrollments   ClassEnrollment[]
 
   @@map("classes")
+}
+
+model CourseClass {
+  id       String @id @default(cuid())
+  courseId String @map("course_id")
+  classId  String @map("class_id")
+
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  class    Class  @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, classId])
+  @@map("course_classes")
+}
+
+model CourseEnrollment {
+  id        String   @id @default(cuid())
+  studentId String   @map("student_id")
+  courseId  String   @map("course_id")
+  enrolledAt DateTime @default(now()) @map("enrolled_at")
+
+  student   Profile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course    Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, courseId])
+  @@map("course_enrollments")
+}
+
+model ClassEnrollment {
+  id        String   @id @default(cuid())
+  studentId String   @map("student_id")
+  classId   String   @map("class_id")
+  enrolledAt DateTime @default(now()) @map("enrolled_at")
+
+  student   Profile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, classId])
+  @@map("class_enrollments")
 }
 
 model Attendance {
@@ -45,6 +109,9 @@ model Attendance {
   studentId String   @map("student_id")
   date      DateTime @db.Date
   status    AttendanceStatus
+  latitude  Float?
+  longitude Float?
+  locationAddress String? @map("location_address")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -61,6 +128,8 @@ model AttendanceCode {
   classId    String   @map("class_id")
   code       String   @unique
   expiryTime DateTime @map("expiry_time")
+  teacherLatitude  Float? @map("teacher_latitude")
+  teacherLongitude Float? @map("teacher_longitude")
   createdAt  DateTime @default(now()) @map("created_at")
 
   // Relations
@@ -70,11 +139,11 @@ model AttendanceCode {
 }
 
 enum Role {
-  STUDENT @map("student")
-  TEACHER @map("teacher")
+  student
+  teacher
 }
 
 enum AttendanceStatus {
-  PRESENT @map("present")
-  ABSENT  @map("absent")
+  present
+  absent
 }

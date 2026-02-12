@@ -8,6 +8,7 @@ import { ActivityIndicator, View } from 'react-native';
 // Import screens (we'll create these next)
 import LoginScreen from './screens/LoginScreen';
 import RegisterScreen from './screens/RegisterScreen';
+import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
 import StudentDashboard from './screens/student/StudentDashboard';
 import TeacherDashboard from './screens/teacher/TeacherDashboard';
 import SplashScreen from './screens/SplashScreen';
@@ -16,6 +17,7 @@ import SplashScreen from './screens/SplashScreen';
 type RootStackParamList = {
   Login: undefined;
   Register: undefined;
+  ForgotPassword: undefined;
   StudentDashboard: undefined;
   TeacherDashboard: undefined;
 };
@@ -97,6 +99,7 @@ export default function App() {
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
           </>
         ) : userRole === 'student' ? (
           <Stack.Screen name="StudentDashboard" component={StudentDashboard} />

@@ -23,7 +23,7 @@ export default function TeacherDashboard() {
                 tabBarIcon: ({ color, size }) => {
                     let iconName;
 
-                    if (route.name === 'Classes') {
+                    if (route.name === 'Courses') {
                         iconName = 'class';
                     } else if (route.name === 'Attendance') {
                         iconName = 'check-circle';
@@ -38,7 +38,7 @@ export default function TeacherDashboard() {
                 headerShown: false,
             })}
         >
-            <Tab.Screen name="Classes" component={ClassesScreen} />
+            <Tab.Screen name="Courses" component={ClassesScreen} />
             <Tab.Screen name="Attendance" component={AttendanceScreen} />
             <Tab.Screen name="Reports" component={ReportsScreen} />
             <Tab.Screen name="Profile" component={ProfileScreen} />

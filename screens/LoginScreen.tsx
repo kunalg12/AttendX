@@ -19,6 +19,7 @@ import LoginIllustration from '../assets/undraw_login_wqkt.png'; // Import the i
 type RootStackParamList = {
     Login: undefined;
     Register: undefined;
+    ForgotPassword: undefined;
     StudentDashboard: undefined;
     TeacherDashboard: undefined;
 };
@@ -103,6 +104,13 @@ export default function LoginScreen({ navigation }: Props) {
                         Don't have an account? Register here
                     </Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                    onPress={() => navigation.navigate('ForgotPassword')}
+                    style={styles.forgotPasswordLink}
+                >
+                    <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                </TouchableOpacity>
             </View>
         </KeyboardAvoidingView>
     );
@@ -163,7 +171,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     registerText: {
-        color: '#black',
+        color: 'black',
         fontSize: 16,
+    },
+    forgotPasswordLink: {
+        marginTop: 15,
+        alignItems: 'center',
+    },
+    forgotPasswordText: {
+        color: '#666',
+        fontSize: 14,
     },
 });

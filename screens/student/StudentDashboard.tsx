@@ -4,7 +4,6 @@ import ClassesScreen from './ClassesScreen';
 import AttendanceScreen from './AttendanceScreen';
 import MarkAttendanceScreen from './MarkAttendanceScreen';
 import ProfileScreen from './ProfileScreen';
-import CoursesScreen from './CoursesScreen';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const Tab = createBottomTabNavigator();
@@ -19,7 +18,7 @@ export default function StudentDashboard() {
                 tabBarIcon: ({ color, size }) => {
                     let iconName;
 
-                    if (route.name === 'Classes') {
+                    if (route.name === 'Courses') {
                         iconName = 'class';
                     } else if (route.name === 'Attendance') {
                         iconName = 'check-circle';
@@ -34,10 +33,13 @@ export default function StudentDashboard() {
             })}
         >
             <Tab.Screen
-                name="Classes"
+                name="Courses"
                 component={ClassesScreen}
                 options={{
                     headerShown: false,
+                    tabBarIcon: ({ color, size }) => (
+                        <MaterialIcons name="class" size={size} color={color} />
+                    ),
                 }}
             />
             <Tab.Screen
