@@ -14,7 +14,7 @@ import {
     Dimensions
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { supabase } from '../supabaseConfig';
+import { signUp } from '../lib/authHelper';
 import RegisterIllustration from '../assets/undraw_sign-up_z2ku.png';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { 
@@ -72,43 +72,32 @@ export default function RegisterScreen({ navigation }: Props) {
 
         setLoading(true);
 
-        // Sign up with Supabase auth
-        const { data: { user }, error: signUpError } = await supabase.auth.signUp({
-            email,
-            password,
-        });
+        try {
+            const { data, error } = await signUp(email, password, fullName, role);
 
-        if (signUpError || !user) {
+            if (error) {
+                Alert.alert('Registration Error', error instanceof Error ? error.message : 'Registration failed');
+                return;
+            }
+
+            // Success message
+            Alert.alert(
+                'Registration Successful',
+                'Your account has been created successfully',
+                [{ text: 'OK', onPress: () => {
+                    try {
+                        navigation.navigate('Login');
+                    } catch (error) {
+                        console.log('Login navigation not available:', error);
+                        Alert.alert('Info', 'Please restart the app to access login');
+                    }
+                }}]
+            );
+        } catch (error) {
+            Alert.alert('Error', 'An unexpected error occurred during registration');
+        } finally {
             setLoading(false);
-            Alert.alert('Error', signUpError?.message || 'Registration failed');
-            return;
         }
-
-        // Insert user profile data
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .insert([
-                {
-                    id: user.id,
-                    email,
-                    full_name: fullName,
-                    role
-                }
-            ]);
-
-        setLoading(false);
-
-        if (profileError) {
-            Alert.alert('Error', profileError.message);
-            return;
-        }
-
-        // Success message
-        Alert.alert(
-            'Registration Successful',
-            'Your account has been created successfully',
-            [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
-        );
     }
 
     return (
@@ -227,7 +216,14 @@ export default function RegisterScreen({ navigation }: Props) {
 
                         <View style={styles.footer}>
                             <Text style={styles.footerText}>Already have an account? </Text>
-                            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                            <TouchableOpacity onPress={() => {
+                                try {
+                                    navigation.navigate('Login');
+                                } catch (error) {
+                                    console.log('Login navigation not available:', error);
+                                    Alert.alert('Info', 'Please restart the app to access login');
+                                }
+                            }}>
                                 <Text style={styles.loginText}>Sign In</Text>
                             </TouchableOpacity>
                         </View>

@@ -35,7 +35,6 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<'student' | 'teacher' | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [isLoading, setIsLoading] = useState(true);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
 
@@ -45,9 +44,18 @@ export default function App() {
       setShowOnboarding(value !== 'true');
     });
 
+    // Add a timeout to prevent infinite loading
+    const loadingTimeout = setTimeout(() => {
+      console.log('Loading timeout - forcing app to show');
+      setLoading(false);
+      setShowOnboarding(false);
+    }, 5000);
+
     // Listen for auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
+        clearTimeout(loadingTimeout);
         setSession(session);
         
         if (event === 'PASSWORD_RECOVERY') {
@@ -56,13 +64,23 @@ export default function App() {
 
         if (session?.user) {
           // Fetch user role from profiles table
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
+          try {
+            const { data, error } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', session.user.id)
+              .single();
 
-          if (data) setUserRole(data.role as 'student' | 'teacher');
+            if (data) {
+              setUserRole(data.role as 'student' | 'teacher');
+            } else if (error) {
+              console.log('Profile fetch error:', error);
+              setUserRole(null);
+            }
+          } catch (error) {
+            console.log('Profile fetch exception:', error);
+            setUserRole(null);
+          }
         } else {
           setUserRole(null);
         }
@@ -73,6 +91,8 @@ export default function App() {
 
     // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.id);
+      clearTimeout(loadingTimeout);
       setSession(session);
 
       if (session?.user) {
@@ -82,8 +102,13 @@ export default function App() {
           .select('role')
           .eq('id', session.user.id)
           .single()
-          .then(({ data }) => {
-            if (data) setUserRole(data.role as 'student' | 'teacher');
+          .then(({ data, error }) => {
+            if (data) {
+              setUserRole(data.role as 'student' | 'teacher');
+            } else if (error) {
+              console.log('Initial profile fetch error:', error);
+              setUserRole(null);
+            }
             setLoading(false);
           });
       } else {
@@ -92,6 +117,7 @@ export default function App() {
     });
 
     return () => {
+      clearTimeout(loadingTimeout);
       if (authListener && authListener.subscription) {
         authListener.subscription.unsubscribe();
       }
@@ -112,17 +138,8 @@ export default function App() {
     }
   }, [url]);
 
-
-  if (isLoading || showOnboarding === null) {
-    return <SplashScreen onLoadingComplete={() => setIsLoading(false)} />;
-  }
-
   if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
+    return <SplashScreen onLoadingComplete={() => setLoading(false)} />;
   }
 
   return (

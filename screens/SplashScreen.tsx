@@ -101,8 +101,9 @@ export default function SplashScreen({ onLoadingComplete }: Props) {
 
         // Complete loading
         const timer = setTimeout(() => {
+            console.log('SplashScreen timeout - calling onLoadingComplete');
             onLoadingComplete();
-        }, 2500);
+        }, 2000);
 
         return () => clearTimeout(timer);
     }, []);

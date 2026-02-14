@@ -28,6 +28,11 @@
     "plugins": [
       "expo-secure-store"
     ],
-    "sdkVersion": "54.0.0"
+    "sdkVersion": "54.0.0",
+    "extra": {
+      "eas": {
+        "projectId": "a70cd5cd-fc57-48e3-b970-ad6ab2bd8a37"
+      }
+    }
   }
 }

@@ -13,7 +13,7 @@ import {
     Dimensions
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { supabase } from '../supabaseConfig';
+import { signIn, getUserProfile } from '../lib/authHelper';
 import LoginIllustration from '../assets/undraw_login_wqkt.png';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { 
@@ -81,15 +81,36 @@ export default function LoginScreen({ navigation }: Props) {
 
         setLoading(true);
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password
-        });
+        try {
+            const { data, error } = await signIn(email, password);
 
-        setLoading(false);
+            if (error) {
+                Alert.alert('Login Error', error.message);
+                return;
+            }
 
-        if (error) {
-            Alert.alert('Error', error.message);
+            if (data.user) {
+                // Get user profile to determine role
+                const { data: profile, error: profileError } = await getUserProfile(data.user.id);
+                
+                if (profileError) {
+                    Alert.alert('Error', 'Could not retrieve user profile');
+                    return;
+                }
+
+                // Navigate based on user role
+                if (profile?.role === 'teacher') {
+                    navigation.navigate('TeacherDashboard');
+                } else if (profile?.role === 'student') {
+                    navigation.navigate('StudentDashboard');
+                } else {
+                    Alert.alert('Error', 'User profile not found or incomplete');
+                }
+            }
+        } catch (error) {
+            Alert.alert('Error', 'An unexpected error occurred during login');
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -139,7 +160,14 @@ export default function LoginScreen({ navigation }: Props) {
                     </View>
 
                     <TouchableOpacity
-                        onPress={() => navigation.navigate('ForgotPassword')}
+                        onPress={() => {
+                            try {
+                                navigation.navigate('ForgotPassword');
+                            } catch (error) {
+                                console.log('ForgotPassword navigation not available:', error);
+                                Alert.alert('Info', 'Password reset feature will be available soon');
+                            }
+                        }}
                         style={styles.forgotPasswordLink}
                     >
                         <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
@@ -164,7 +192,14 @@ export default function LoginScreen({ navigation }: Props) {
 
                     <View style={styles.footer}>
                         <Text style={styles.footerText}>Don't have an account? </Text>
-                        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+                        <TouchableOpacity onPress={() => {
+                            try {
+                                navigation.navigate('Register');
+                            } catch (error) {
+                                console.log('Register navigation not available:', error);
+                                Alert.alert('Info', 'Registration feature will be available soon');
+                            }
+                        }}>
                             <Text style={styles.registerText}>Sign Up</Text>
                         </TouchableOpacity>
                     </View>

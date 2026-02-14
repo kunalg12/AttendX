@@ -21,7 +21,7 @@
     "babel-preset-expo": "^54.0.10",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.4",
-    "expo": "~54.0.0",
+    "expo": "^54.0.0",
     "expo-application": "~7.0.8",
     "expo-clipboard": "~8.0.8",
     "expo-device": "~8.0.10",
@@ -39,8 +39,8 @@
     "metro-config": "^0.83.1",
     "metro-resolver": "^0.83.1",
     "pg": "^8.18.0",
-    "react": "18.3.1",
-    "react-native": "0.76.7",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
     "react-native-biometrics": "^3.0.1",
     "react-native-chart-kit": "^6.12.0",
     "react-native-dev-menu": "^4.1.1",
@@ -49,23 +49,20 @@
     "react-native-html-to-pdf": "^0.12.0",
     "react-native-maps": "1.20.1",
     "react-native-paper": "^5.13.1",
-    "react-native-reanimated": "~3.16.1",
+    "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
-    "react-native-url-polyfill": "^2.0.0"
+    "react-native-url-polyfill": "^2.0.0",
+    "react-native-worklets": "^0.5.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/lodash": "^4.17.16",
-    "@types/react": "~18.3.1",
+    "@types/react": "~19.1.10",
     "@types/react-native-html-to-pdf": "^0.8.3",
     "prisma": "7.2.0",
     "tsx": "^4.21.0",
     "typescript": "~5.9.2"
-  },
-  "overrides": {
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
   },
   "private": true
 }
